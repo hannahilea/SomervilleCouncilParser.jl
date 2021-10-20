@@ -23,6 +23,8 @@ end
 
 validate_date(date::Date) = string(month(date), "/", day(date), "/", year(date))
 
+agenda_dateformat = dateformat"E, U d, YYYY  H:MM p"
+
 """
     request_meetings(start_date, stop_date)
 
@@ -38,12 +40,13 @@ function request_meetings(start_date, stop_date)
         return root(parsehtml(String(r.body)))
     end
     meeting_nodes = findall("//div[@class='RowLink']", html)
-    return map(meeting_nodes) do m
+    return DataFrame(map(meeting_nodes) do m
         deets = split(elements(m)[1]["title"], "\r")
         name = replace(deets[3], "Board:\t" => "")
         link = joinpath("http://somervillecityma.iqm2.com", elements(m)[1]["href"][2:end])
-        return (; name, date=deets[1], link)
-    end
+        date = DateTime(deets[1], agenda_dateformat)
+        return (; name, date, link)
+    end)
 end
 
 #####
@@ -71,7 +74,7 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
     return DataFrame(Arrow.Table(cache_path))
 end
 
-function request_agenda_items(meeting_link)
+function request_agenda_items(meeting_link; verbose=false)
     r = HTTP.get(meeting_link)
     html = with_logger(NullLogger()) do
         return root(parsehtml(String(r.body)))
@@ -90,7 +93,7 @@ function request_agenda_items(meeting_link)
 
     df = DataFrame(map(i -> (; name=i.name, content=i.content), items))
     if nrow(df) == 0
-        @warn "Meeting has no items..." meeting_link
+        verbose && (@warn "Meeting has no items..." meeting_link)
         return df
     end
     
@@ -121,44 +124,44 @@ end
 function search_agendas_for_content(start_date, stop_date, search_terms; 
                                     cache_dir=nothing, case_invariant=true)
     meetings = request_meetings(start_date, stop_date)
-    @info """Found agendas for $(length(meetings)) meetings between $(start_date) and $(stop_date)! 
+    @info """Found agendas for $(nrow(meetings)) meetings between $(start_date) and $(stop_date)! 
              Searching their agendas for $(search_terms)..."""
 
     relevant_items = DataFrame()
-    non_relevant_meetings = AbstractString[]
-    parsing_failed_meetings = DataFrame()
-    @showprogress for m in meetings
+    p = Progress(nrow(meetings) + 1)
+    next!(p)
+    _get_relevant_items = (link, date, name) -> begin
         try
-            items = get_agenda_items(m.link; cache_dir)
+            next!(p)
+            total_items = 0
+            items = get_agenda_items(link; cache_dir)
+            total_items = nrow(items)
             items = filter_agenda(items, search_terms; case_invariant)
-            if nrow(items) == 0
-                @debug "No relevant agenda items for $(m.name) [$(m.date)]"
-                push!(non_relevant_meetings, m.link)
-                continue
-            end
-            @debug """Relevant agenda items for $(m.name)!" 
-                    -> $(m.date)
-                    -> $(m.link)
-                    $(items.content)
-                   """
-            insertcols!(items, :meeting => m.name, 
-                               :date => m.date, 
-                               :meeting_link => m.link)
+            nrow(items) == 0 && return (0, total_items, nothing)
+
+            insertcols!(items, :meeting => name, 
+                               :date => date, 
+                               :meeting_link => link)
             relevant_items = vcat(relevant_items, items)
+            return (nrow(items), total_items, nothing)
         catch e
-            @warn "Failed on meeting!" m.link m.name m.date e
-            parsing_failed_meetings = vcat(parsing_failed_meetings, m)
+            return (0, total_items, e)
         end
+        
+        return true
     end
+    transform!(meetings, [:link, :date, :name] => ByRow(_get_relevant_items) => [:num_items, :total_items, :failed_parsing])
+
     # Summarize
-    num_rel_m = length(unique(relevant_items.meeting_link))
-    failed = nrow(parsing_failed_meetings) == 0 ? "" : "-> $(nrow(parsing_failed_meetings)) meetings that failed parsing (may be relevant)"
-    @info """For the $(length(meetings)) meetings between $(start_date) and $(stop_date):
-            -> $(num_rel_m) meetings with a total of $(nrow(relevant_items)) relevant items
-            -> $(length(non_relevant_meetings)) meetings with no relevant items
-            $failed
+    num_rel_m = nrow(relevant_items) == 0 ? 0 : length(unique(relevant_items.meeting_link))
+    num_failed = nrow(meetings) - count(isnothing.(meetings.failed_parsing))
+    num_irrel = nrow(meetings) - num_failed - num_rel_m
+    failed = num_failed == 0 ? "" : "\n  -> $(num_failed) meetings that failed parsing (may be relevant)"
+    @info """For the $(nrow(meetings)) meetings between $(start_date) and $(stop_date):
+            -> $(length(unique(relevant_items.meeting_link))) meetings with a total of $(nrow(relevant_items)) relevant items
+            -> $(num_irrel) meetings with no relevant items$failed
           """
-    return (; items=relevant_items, all_meetings=meetings, failed=parsing_failed_meetings)
+    return (; items=relevant_items, meetings)
 end
 
 function display_items_by_meeting(items::DataFrame)

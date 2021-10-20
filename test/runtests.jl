@@ -21,10 +21,11 @@ end
 
 @testset "`request_meetings`" begin
     meetings = request_meetings("6/1/2020", "6/1/2020")
-    @test length(meetings) == 2
+    @test nrow(meetings) == 2
     m = first(meetings)
     @test m.name == "Public Health and Public Safety Committee"
-    @test m.date == "MONDAY, JUNE 1, 2020  6:00 PM"
+    @test m.date == DateTime("2020-06-01T18:00:00")
+    @test isa(m.date, DateTime)
     @test m.link == "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3163"
 end
 
@@ -81,6 +82,6 @@ end
     cache_dir = mktempdir()
     x = search_agendas_for_content("9/1/2021", "10/1/2021", ["dpw"]; cache_dir)
     @test nrow(x.items) == 4
-    @test length(x.all_meetings) == 13 
-    @test nrow(x.failed) == 0
+    @test nrow(x.meetings) == 13 
+    @test all(isnothing.(x.meetings.failed_parsing))
 end

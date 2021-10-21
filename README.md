@@ -16,7 +16,7 @@ TODO
 
 ## Feature requests, bugs, and query assistance
 
-Do you have an idea for a cool new feature? Have you found a bug? Do you need help formatting a query? Please [file an issue]() or open a pull request!
+Do you have an idea for a cool new feature? Have you found a bug? Do you need help formatting a query? Please [file an issue](https://github.com/hannahilea/SomervilleCouncilParser.jl/issues/new/choose) or open a pull request!
 
 ## Examples
 TODO

@@ -13,3 +13,17 @@ HttpCommon = "77172c1b-203f-54ac-aa54-3f1198fe9f90"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+Arrow = "2.1"
+DataFrames = "1.2"
+ExXML = "1.1"
+HTTP = "9.16"
+HttpCommon = "0.5"
+ProgressMeter = "1.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

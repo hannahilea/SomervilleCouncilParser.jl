@@ -9,7 +9,7 @@ Search the meeting artifacts (agendas, minutes) of the City Council of Somervill
 - [Motivation](#motivation)
 - [Feature requests, bugs, query assistance](#feature-requests-bugs-and-query-assistance)
 - [Examples](#examples)
-- [Getting started if you've never used Julia before (and/or aren't a programmer)](#getting-started-new-users)
+- [Getting started if you've never used Julia before (and/or aren't a programmer)](#getting-started---new-users)
 
 ## Motivation
 TODO
@@ -26,7 +26,7 @@ using Pkg
 Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
 using SomervilleCouncilParser
 ```
-(If you aren't sure what that even means, and/or you're entirely new to Julia, see the following section on [getting started with the basics](#getting-started-new-users)!)
+(If you aren't sure what that even means, and/or you're entirely new to Julia, see the following section on [getting started with the basics](#getting-started---new-users)!)
 
 ### TODO
 
@@ -81,7 +81,7 @@ So you want to give this project a try, but you're totally lost on how to get st
     Pkg.add("SomeFunExternalDependency")
     ```
     and then you can use it:
-    
+
     ```julia
     using SomeFunExternalDependency
     ```

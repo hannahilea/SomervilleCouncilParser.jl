@@ -1,6 +1,6 @@
 # SomervilleCouncilParser.jl
 
-Tool for parsing and searching meeting agendas from the City Council of Somerville, MA.
+Search the meeting artifacts (agendas, minutes) of the City Council of Somerville, MA.
 
 **Contents:**
 

@@ -27,7 +27,7 @@ Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
 using SomervilleCouncilParser
 ```
 
-You should now be able to run any of the examples from the [examples](../examples.md) section, by typing (or copying) them directly into the REPL. For example, to list all meetings that occurred on June 1, 2020, do
+You should now be able to run any of the examples from the [examples](../src/examples.md) section, by typing (or copying) them directly into the REPL. For example, to list all meetings that occurred on June 1, 2020, do
 ```julia
 meetings = request_meetings("6/1/2020", "6/1/2020")
 ```

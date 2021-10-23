@@ -7,90 +7,55 @@ Search the meeting artifacts (agendas, minutes) of the City Council of Somervill
 **Contents:**
 
 - [Motivation](#motivation)
+- [Getting started](#getting-started)
 - [Feature requests, bugs, query assistance](#feature-requests-bugs-and-query-assistance)
-- [Examples](#examples)
-- [Getting started if you've never used Julia before (and/or aren't a programmer)](#getting-started---new-users)
 
 ## Motivation
-TODO
+While the Somerville, MA, City Council agendas and minutes are posted publicly, it can be difficult to search through them---the built in search function is good for one-off searches, but not really built for larger data investigation tasks. This tool allows you to search those artifacts in a way that enables downstream munging. 
 
-## Feature requests, bugs, and query assistance
-
-Do you have an idea for a cool new feature? Have you found a bug? Do you need help formatting a query? Please [file an issue](https://github.com/hannahilea/SomervilleCouncilParser.jl/issues/new/choose) or open a pull request!
-
-## Examples
-
-You'll need to install this package before trying any of the examples. To do that, from your Julia REPL, do
+For example, you want to know which meetings occurred between May 1 and May 15, 2021: 
 ```julia
 using Pkg
 Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
 using SomervilleCouncilParser
+
+TODO
 ```
-(If you aren't sure what that even means, and/or you're entirely new to Julia, see the following section on [getting started with the basics](#getting-started---new-users)!)
 
-### TODO
+Of those meetings, you want to know which meetings included budget discussions: 
+```julia
+TODO
+```
 
+Now you know which meeting minutes to read:
+```julia
+TODO
+```
 
-## Getting started - new users!
-So you want to give this project a try, but you're totally lost on how to get started? This section is for you! (If you're still confused after reading this section, please [let me know](https://github.com/hannahilea/SomervilleCouncilParser.jl/issues/new/choose) so we can clarify further. :) )
+But wait, how many times did the finance committee even meet in the last year?
+```julia
+TODO
+```
 
-1. First things first: this project is written in a programming language called Julia. To use it, you'll need to install Julia. First,
-    1. Download the installer for your particular computer (if in doubt, you likely need "64-bit" or "64-bit (installer)"): [Installers](https://julialang.org/downloads/#current_stable_release)
-    2. Run the installer!
+...how many times did _any_ of the comittees meet in 2020?
+```julia
+TODO
+```
 
-2. Find and run the installed Julia program the same way you'd find any other program installed on your computer---possibly by double-clicking on its desktop icon, or by finding it in the Applications list, depending on what type of computer you have. 
+...and how did that compare to 2019?
+```julia
+TODO
+```
 
-3. When Julia launches, it will open a text prompt window called a REPL (a "read-eval-print-loop"). Type
-    ```julia
-    "hello world"
-    ```
-    into the prompt and then hit `enter`. Congrats, you're using Julia!
+Or maybe you want to know whether any upcoming meetings will be discussing trees? (This example was generated on 22 Oct 2021; you will see different results based on when you search for yourself!)
+```julia
+TODO
+```
 
-4. Next, let's install this SomervilleCouncilParser project! In the REPL, type (or copy and paste) and then hit enter:
-    ```julia
-    using Pkg
-    Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
-    using SomervilleCouncilParser
-    ```
+## Getting started
+For installation instructions and additional examples, read the documentation: 
+    - [Installation](#TODO)
+    - [Examples](#TODO)
 
-4. Any of the examples in the above section can now be typed (or copied) directly into the REPL. For example, to list all meetings that occurred on June 1, 2020, do
-    ```julia
-    meetings = request_meetings("6/1/2020", "6/1/2020")
-    ```
-    You should see a response that looks something like
-    ```julia
-    2×3 DataFrame
-    Row │ name                               date                 link                              
-        │ String                             DateTime…            String                            
-    ─────┼───────────────────────────────────────────────────────────────────────────────────────────
-    1 │ Public Health and Public Safety …  2020-06-01T18:00:00  http://somervillecityma.iqm2.com…
-    2 │ Finance Committee                  2020-06-01T20:00:00  http://somervillecityma.iqm2.com…
-    ```
-
-5. If you type a long query (say, you accidentally search for 10 years' worth of meetings instead of a single year!) and want to cancel the command in progress, do `ctrl+c` to cancel it.
-
-6. If you encounter Julia code examples that use an external project (i.e., code that lives outside of this project), they will look like this:
-    ```
-    using SomeFunExternalDependency
-    ```
-    (for a depencency that is named `SomeFunExternalDependency`). Before you run this `using ...` command, you'll have to install the package from within Julia. 
-    
-    To do this, type
-    ```julia
-    using Pkg
-    Pkg.add("SomeFunExternalDependency")
-    ```
-    and then you can use it:
-
-    ```julia
-    using SomeFunExternalDependency
-    ```
-
-    Don't worry if you forget to install a dependency---Julia will show you an error with prompt for what to do:
-    ```julia
-    julia> using SomeFunPackageYouForgotToInstallFirst
-    ERROR: ArgumentError: Package SomeFunPackageYouForgotToInstallFirst not found in current path:
-    - Run `import Pkg; Pkg.add("SomeFunPackageYouForgotToInstallFirst")` to install the SomeFunPackageYouForgotToInstallFirst package.
-    ```
-
-6. To leave the Julia program when you're done, type `exit()`, or close the REPL window.
+## Feature requests, bugs, and query assistance
+Do you have an idea for a new feature? Have you found a bug? Do you need help formatting (or even running) a query? Please [file an issue](https://github.com/hannahilea/SomervilleCouncilParser.jl/issues/new/choose) or open a pull request!

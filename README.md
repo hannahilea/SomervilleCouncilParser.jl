@@ -1,6 +1,9 @@
 # SomervilleCouncilParser.jl
 
-[![CI](https://github.com/hannahilea/SomervilleCouncilParser.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/hannahilea/SomervilleCouncilParser.jl/actions/workflows/CI.yml)[![codecov](https://codecov.io/gh/hannahilea/SomervilleCouncilParser.jl/branch/main/graph/badge.svg?token=MKEJ2K1ONT)](https://codecov.io/gh/hannahilea/SomervilleCouncilParser.jl)
+[![CI](https://github.com/hannahilea/SomervilleCouncilParser.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/hannahilea/SomervilleCouncilParser.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/hannahilea/SomervilleCouncilParser.jl/branch/main/graph/badge.svg?token=MKEJ2K1ONT)](https://codecov.io/gh/hannahilea/SomervilleCouncilParser.jl)
+[![Docs: stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable)
+[![Docs: development](https://img.shields.io/badge/docs-dev-blue.svg)](https://hannahilea.github.io/SomervilleCouncilParser.jl/dev)
 
 Search the meeting artifacts (agendas, minutes) of the City Council of Somerville, MA.
 

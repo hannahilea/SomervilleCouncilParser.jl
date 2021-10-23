@@ -71,3 +71,4 @@ That's it!
     ERROR: ArgumentError: Package SomeFunPackageYouForgotToInstallFirst not found in current path:
     - Run `import Pkg; Pkg.add("SomeFunPackageYouForgotToInstallFirst")` to install the SomeFunPackageYouForgotToInstallFirst package.
     ```
+- When running in Terminal.app (default on macOS), use CMD + double click to open any link in a browser.

@@ -14,15 +14,15 @@ Search the meeting artifacts (agendas, minutes) of the City Council of Somervill
 - [Feature requests, bugs, query assistance](#feature-requests-bugs-and-query-assistance)
 
 ## Motivation
-While the Somerville, MA, City Council agendas and minutes are posted publicly, it can be difficult to search through them---the built in search function is good for one-off searches, but not really built for larger data investigation tasks. This tool allows you to search those artifacts in a way that enables downstream munging. 
+While the Somerville, MA, City Council agendas and minutes are [posted publicly](http://somervillecityma.iqm2.com/Citizens/calendar.aspx), it can be difficult to search through them---the [built-in site search](http://somervillecityma.iqm2.com/Citizens/Search.aspx#SearchText=) is good for one-off queries, but not really for larger data investigation tasks. SomervilleCouncilParser.jl allows you to search those artifacts in a way that facilitates downstream munging. 
 
-For example, you want to know which meetings occurred between May 1 and May 15, 2021: 
+For example, say you want to know what meetings occurred in the month of September, 2021: 
 ```julia
-using Pkg
-Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
-using SomervilleCouncilParser
+julia> using Pkg
+julia> Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
+julia> using SomervilleCouncilParser
 
-TODO
+julia> meetings = request_meetings("9/1/2021", "9/30/2021")
 ```
 
 Of those meetings, you want to know which meetings included budget discussions: 

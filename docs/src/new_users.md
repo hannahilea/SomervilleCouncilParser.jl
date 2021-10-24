@@ -1,4 +1,4 @@
-# New users - getting started from scratch
+# Getting started from the very basics
 So you want to give this tool a try, but you're totally lost on how to get started? This section is for you! (If you're still confused after reading this, please [file an issue for what tripped you up](https://github.com/hannahilea/SomervilleCouncilParser.jl/issues/new/choose) so we can clarify further. :) )
 
 ## Setting up Julia

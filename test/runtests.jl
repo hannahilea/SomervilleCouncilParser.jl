@@ -1,6 +1,6 @@
 using Test
 using SomervilleCouncilParser
-using SomervilleCouncilParser: validate_date
+using SomervilleCouncilParser: validate_date, request_agenda_items
 using DataFrames, Arrow, Dates
 
 include("agendas.jl")

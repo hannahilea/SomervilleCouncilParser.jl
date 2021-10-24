@@ -33,6 +33,9 @@ end
     @test count(items.is_heading) == 3
     @test names(items) == ["is_heading", "item", "content"]
 
+    @test request_agenda_items(meeting_link) == request_agenda_items(3163)
+    @test request_agenda_items("3163") == request_agenda_items(3163)
+
     # support additional special cases
     meeting_link2 = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3421"
     items = SomervilleCouncilParser.request_agenda_items(meeting_link2)
@@ -41,6 +44,9 @@ end
 
 @testset "`get_agenda_items`" begin
     meeting_link = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3163"
+
+    @test get_agenda_items(meeting_link) == get_agenda_items(3163)
+    @test get_agenda_items("3163") == get_agenda_items(3163)
 
     # Test caching
     cache_dir = mktempdir()

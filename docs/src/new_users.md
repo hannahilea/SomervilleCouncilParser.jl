@@ -21,24 +21,15 @@ into the prompt and then hit `enter`. Congrats, you're using Julia!
 
 ## Setting up SomervilleCouncilParser.jl
 Next, let's install this project! In the REPL, type (or copy and paste) and then hit enter:
-```julia
+```@example
 using Pkg
 Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
 using SomervilleCouncilParser
 ```
 
 You should now be able to run any of the examples from the [examples](../src/examples.md) section, by typing (or copying) them directly into the REPL. For example, to list all meetings that occurred on June 1, 2020, do
-```julia
+```@example
 meetings = request_meetings("6/1/2020", "6/1/2020")
-```
-You should see a response that looks something like
-```julia
-2×3 DataFrame
-Row │ name                               date                 link                              
-    │ String                             DateTime…            String                            
-─────┼───────────────────────────────────────────────────────────────────────────────────────────
-1 │ Public Health and Public Safety …  2020-06-01T18:00:00  http://somervillecityma.iqm2.com…
-2 │ Finance Committee                  2020-06-01T20:00:00  http://somervillecityma.iqm2.com…
 ```
 
 To leave the Julia program when you're done, type `exit()`, or close the REPL window.
@@ -71,4 +62,5 @@ That's it!
     ERROR: ArgumentError: Package SomeFunPackageYouForgotToInstallFirst not found in current path:
     - Run `import Pkg; Pkg.add("SomeFunPackageYouForgotToInstallFirst")` to install the SomeFunPackageYouForgotToInstallFirst package.
     ```
+
 - When running in Terminal.app (default on macOS), use CMD + double click to open any link in a browser.

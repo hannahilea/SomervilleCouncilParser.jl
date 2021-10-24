@@ -9,4 +9,4 @@ makedocs(; format=Documenter.HTML(; prettyurls=true),
                 "API reference" => "api.md"], strict=true)
 
 deploydocs(; repo="github.com/hannahilea/SomervilleCouncilParser.jl.git",
-           push_preview=true, devbranch="main")
+           push_preview=true, devbranch="main", devurl="dev")

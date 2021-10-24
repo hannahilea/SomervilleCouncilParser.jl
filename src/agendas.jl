@@ -1,6 +1,3 @@
-#####
-## Requesting meetings
-#####
 """
     validate_date(date::AbstractString)
     validate_date(date::Date)
@@ -56,6 +53,16 @@ end
 agenda_url_prefix = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID="
 cache_version = "v1"
 
+"""
+    get_agenda_items(meeting_link; cache_dir=nothing)
+
+Return `DataFrame` of agenda items from meeting `meeting_link`. `meeting_link` can be either
+the full link (`"http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=2570"`) or
+the meeting ID (`2570`).
+
+When `cache_dir` is not empty, agendas are read from the cache if they've been previously 
+downloaded. If they do not exist in the cache, they'll be added to it.
+"""
 function get_agenda_items(meeting_link; cache_dir=nothing)
     isnothing(cache_dir) && return request_agenda_items(meeting_link)
 
@@ -74,7 +81,23 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
     return DataFrame(Arrow.Table(cache_path))
 end
 
-function request_agenda_items(meeting_link; verbose=false)
+"""
+    request_agenda_items(meeting_id; verbose=false)
+
+Return `DataFrame` of agenda items from meeting `meeting_link`. `meeting_link` can be either
+the full link (`"http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=2570"`) or
+the meeting ID (`2570`).
+"""
+function request_agenda_items(meeting_id; verbose=false) 
+    return request_agenda_items(agenda_url_prefix * string(meeting_id); verbose)
+end
+
+function request_agenda_items(meeting_link::AbstractString; verbose=false)
+    if !startswith(meeting_link, agenda_url_prefix)
+        meeting_link = agenda_url_prefix * meeting_link
+        @warn "Inserting missing agenda prefix" meeting_link
+    end
+    
     r = HTTP.get(meeting_link)
     html = with_logger(NullLogger()) do
         return root(parsehtml(String(r.body)))
@@ -104,6 +127,13 @@ function request_agenda_items(meeting_link; verbose=false)
     return df
 end
 
+"""
+    filter_agenda(agenda::DataFrame, search_terms; case_invariant=true)
+
+Return copy of `agenda` filtered such that only rows containing an item from 
+`search_terms` in the description of the item will be preserved. When `case_invariant`
+is true, ignores uppercase vs lowercase letters.
+"""
 function filter_agenda(agenda::DataFrame, search_terms; case_invariant=true)
     nrow(agenda) == 0 && return agenda
     case_invariant && (search_terms = lowercase.(search_terms))
@@ -121,6 +151,13 @@ end
 ## All together now
 #####
 
+"""
+    search_agendas_for_content(start_date, stop_date, search_terms; 
+                               cache_dir=nothing, case_invariant=true)
+
+Return `NamedTuple` containing `meetings` (a `DataFrame` of meetings found within the given `start_date`-`stop_date`
+range) and `items` (a `DataFrame` of all items containing at least one of the `search_terms`).
+"""
 function search_agendas_for_content(start_date, stop_date, search_terms; 
                                     cache_dir=nothing, case_invariant=true)
     meetings = request_meetings(start_date, stop_date)
@@ -158,12 +195,17 @@ function search_agendas_for_content(start_date, stop_date, search_terms;
     num_irrel = nrow(meetings) - num_failed - num_rel_m
     failed = num_failed == 0 ? "" : "\n  -> $(num_failed) meetings that failed parsing (may be relevant)"
     @info """For the $(nrow(meetings)) meetings between $(start_date) and $(stop_date):
-            -> $(length(unique(relevant_items.meeting_link))) meetings with a total of $(nrow(relevant_items)) relevant items
-            -> $(num_irrel) meetings with no relevant items$failed
+            -> $(length(unique(relevant_items.meeting_link))) meeting(s) with a total of $(nrow(relevant_items)) relevant item(s)
+            -> $(num_irrel) meeting(s) with no relevant items$failed
           """
     return (; items=relevant_items, meetings)
 end
 
+"""
+    display_items_by_meeting(items::DataFrame)
+
+Display `items` grouped by meeting, along with the meeting's date, name, and url.
+"""
 function display_items_by_meeting(items::DataFrame)
     gdf = groupby(items, :meeting_link)
     for g in gdf

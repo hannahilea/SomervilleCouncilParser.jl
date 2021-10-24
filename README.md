@@ -24,9 +24,32 @@ julia> Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
 julia> using SomervilleCouncilParser
 
 julia> meetings = request_meetings("9/1/2021", "9/30/2021")
+13×3 DataFrame
+ Row │ name                               date                 link                              
+     │ String                             DateTime…            String                            
+─────┼───────────────────────────────────────────────────────────────────────────────────────────
+   1 │ Land Use Committee                 2021-09-01T18:00:00  http://somervillecityma.iqm2.com…
+   2 │ City Council                       2021-09-09T19:00:00  http://somervillecityma.iqm2.com…
+  ⋮  │                 ⋮                           ⋮                           ⋮
+  13 │ Legislative Matters Committee      2021-09-30T18:00:00  http://somervillecityma.iqm2.com…
+                                                                                  10 rows omitted
+
+julia> length(meetings.name) # How many meetings were there?
+julia> unique(meetings.name) # Which committees met?
+10-element Vector{String}:
+ "Land Use Committee"
+ "City Council"
+ "School Committee"
+ "Traffic and Parking Committee"
+ "Finance Committee"
+ "Licenses and Permits Committee"
+ "Public Utilities and Public Works Committee"
+ "Confirmation of Appointments and Personnel Matters Committee"
+ "Housing and Community Development Committee"
+ "Legislative Matters Committee"
 ```
 
-Of those meetings, you want to know which meetings included agenda items that mentioned Fluff Fest: 
+If you want to know which meeting agendas mentioned Somerville's own [Fluff Fest](https://www.flufffestival.com/): 
 ```julia
 julia> results = search_agendas_for_content("9/1/2021", "9/30/2021", ["fluff"]);
 ┌ Info: Found agendas for 13 meetings between 9/1/2021 and 9/30/2021! 
@@ -45,7 +68,7 @@ julia> display_items_by_meeting(results.items)
 ```
 (If you follow the link to the agenda, and click on item 212344, you can see that the Council voted unanimously to approve the festival. Phew!)
 
-For more examples, see the [documentation](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable/examples.html)!
+For more examples, see the [documentation](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable/examples.html).
 
 ## Getting started
 For installation instructions and additional examples, read [the documentation]([documentation](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable): 

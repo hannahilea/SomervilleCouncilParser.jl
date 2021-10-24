@@ -21,14 +21,15 @@ into the prompt and then hit `enter`. Congrats, you're using Julia!
 
 ## Setting up SomervilleCouncilParser.jl
 Next, let's install this project! In the REPL, type (or copy and paste) and then hit enter:
-```@example
+```julia
 using Pkg
 Pkg.add(url="https://github.com/hannahilea/SomervilleCouncilParser.jl")
-using SomervilleCouncilParser
+
 ```
 
 You should now be able to run any of the examples from the [examples](../src/examples.md) section, by typing (or copying) them directly into the REPL. For example, to list all meetings that occurred on June 1, 2020, do
 ```@example
+using SomervilleCouncilParser
 meetings = request_meetings("6/1/2020", "6/1/2020")
 ```
 

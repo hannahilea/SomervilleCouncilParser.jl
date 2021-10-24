@@ -158,8 +158,8 @@ function search_agendas_for_content(start_date, stop_date, search_terms;
     num_irrel = nrow(meetings) - num_failed - num_rel_m
     failed = num_failed == 0 ? "" : "\n  -> $(num_failed) meetings that failed parsing (may be relevant)"
     @info """For the $(nrow(meetings)) meetings between $(start_date) and $(stop_date):
-            -> $(length(unique(relevant_items.meeting_link))) meetings with a total of $(nrow(relevant_items)) relevant items
-            -> $(num_irrel) meetings with no relevant items$failed
+            -> $(length(unique(relevant_items.meeting_link))) meeting(s) with a total of $(nrow(relevant_items)) relevant item(s)
+            -> $(num_irrel) meeting(s) with no relevant items$failed
           """
     return (; items=relevant_items, meetings)
 end

@@ -43,29 +43,29 @@ That's it!
 
 - If you encounter Julia code snippets that use an external project (i.e., code that lives outside of this project), they will look like this:
 
-        ```julia
-        using SomeFunExternalDependency
-        ```
+    ```julia
+    using SomeFunExternalDependency
+    ```
 
     (for a depencency that is named `SomeFunExternalDependency`).
 
     Before you run this `using ...` command, you'll have to install the package from within Julia. To do this, type
 
-        ```julia
-        using Pkg
-        Pkg.add("SomeFunExternalDependency")
-        ```
+    ```julia
+    using Pkg
+    Pkg.add("SomeFunExternalDependency")
+    ```
 
     and then you can use it:
 
-        ```julia
-        using SomeFunExternalDependency
-        ```
+    ```julia
+    using SomeFunExternalDependency
+    ```
 
     Don't worry about forgetting to install dependencies---if you do, Julia will show you an error with prompt for what to do:
 
-        ```julia
-        julia> using SomeFunPackageYouForgotToInstallFirst
-        ERROR: ArgumentError: Package SomeFunPackageYouForgotToInstallFirst not found in current path:
-        - Run `import Pkg; Pkg.add("SomeFunPackageYouForgotToInstallFirst")` to install the SomeFunPackageYouForgotToInstallFirst package.
-        ```
+    ```julia
+    julia> using SomeFunPackageYouForgotToInstallFirst
+    ERROR: ArgumentError: Package SomeFunPackageYouForgotToInstallFirst not found in current path:
+    - Run `import Pkg; Pkg.add("SomeFunPackageYouForgotToInstallFirst")` to install the SomeFunPackageYouForgotToInstallFirst package.
+    ```

@@ -28,6 +28,8 @@ sort(meetings, [:date]; rev=true)
 #### ...finding all dates that held more than one meeting
 ```@example 1
 using Dates
+using Pkg
+Pkg.add("DataFrames")
 using DataFrames
 transform!(meetings, :date => ByRow(Date) => :day)
 gdf = filter(g -> nrow(g) > 1, groupby(meetings, :day))

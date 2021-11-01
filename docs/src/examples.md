@@ -16,14 +16,19 @@ meetings = request_meetings("10/1/2021", "10/31/2021")
 ```
 Because this function (like many) returns a `DataFrame`, you can use any of the `DataFrame` operations to act on it:
 - Filtering for a certain meeting type
+
     ```@example 1
     full_council_meetings = filter(:name => ==("City Council"), meetings)
     ```
+
 - Sorting by date (most to least recent):
+
     ```@example 1
     sort(meetings, [:date]; rev=true)
     ```
+
 - Find all dates that held more than one meeting
+
     ```@example 1
     using Dates
     using DataFrames
@@ -37,16 +42,16 @@ To learn more about working with `DataFrame`s, see [the official DataFrames.jl d
 ### Get the agenda items from a single meeting
 If you want to see the list of agenda items from one of those meetings, you can request it by meeting id (as listed in the above `meetings` table)
 ```@example 1
-agenda = get_agenda_items(3427)
+agenda = get_agenda_items(3427);
 ```
 or from the full meeting link (which can be gotten from either the `meetings` table or when browsing the Council website directly)
 ```@example 1
-agenda = get_agenda_items("http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3427")
+agenda = get_agenda_items("http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3427");
 ```
 or from a link directly from the table
 ```@example 1
 example_meeting = last(meetings)
-agenda = get_agenda_items(example_meeting.link)
+agenda = get_agenda_items(example_meeting.link);
 ```
 
 ### Search the agenda items from a single meeting
@@ -60,7 +65,6 @@ We can see that the results that contain "hawk" actually contain "HAWK", the cro
 items = filter_agenda(agenda, ["hawk"]; case_invariant=false)
 ```
 ...which is empty, because they didn't discuss the birds after all. A shame!
-```
 
 Of course, you could also handle agenda content searching yourself, by filtering on the `content` field from the agenda items.
 

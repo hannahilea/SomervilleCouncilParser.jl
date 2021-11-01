@@ -10,7 +10,7 @@ using DataFrames
 using ProgressMeter
 
 include("agendas.jl")
-export request_meetings, get_agenda_items, filter_agenda, 
-       search_agendas_for_content, display_items_by_meeting
+export request_meetings, get_agenda_items, filter_agenda, search_agendas_for_content,
+       display_items_by_meeting
 
 end # module

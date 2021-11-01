@@ -10,7 +10,7 @@ First things first: this project is written in a programming language called Jul
 
 3. Optional: Want to run Julia from the command prompt/terminal? (If you don't know what this means, that's fine---you likely don't need this option!) If so, instructions for adding it to your PATH here: [mac](https://julialang.org/downloads/platform/#optional_add_julia_to_path) and [windows](https://julialang.org/downloads/platform/#adding_julia_to_path_on_windows_10)
 
-Find and run the installed Julia program the same way you'd find any other program installed on your computer---possibly by double-clicking on its desktop icon, or by finding it in the Applications list, depending on what type of computer you have. 
+Find and run the installed Julia program the same way you'd find any other program installed on your computer---possibly by double-clicking on its desktop icon, or by finding it in the Applications list, depending on what type of computer you have.
     - If you've added it to your PATH, above, you can run in from the command line by typing `julia`.
 
 When Julia launches, it will open a text prompt window called a REPL ("read-eval-print-loop"). Type
@@ -42,24 +42,30 @@ That's it!
 - When running in Terminal.app (default on macOS), use CMD + double click to open any link in a browser.
 
 - If you encounter Julia code snippets that use an external project (i.e., code that lives outside of this project), they will look like this:
-        ```julia
-        using SomeFunExternalDependency
-        ```
-    (for a depencency that is named `SomeFunExternalDependency`). 
-    
-    Before you run this `using ...` command, you'll have to install the package from within Julia. To do this, type
-        ```julia
-        using Pkg
-        Pkg.add("SomeFunExternalDependency")
+
+    ```julia
+    using SomeFunExternalDependency
     ```
+
+    (for a depencency that is named `SomeFunExternalDependency`).
+
+    Before you run this `using ...` command, you'll have to install the package from within Julia. To do this, type
+
+    ```julia
+    using Pkg
+    Pkg.add("SomeFunExternalDependency")
+    ```
+
     and then you can use it:
-        ```julia
-        using SomeFunExternalDependency
-        ```
+
+    ```julia
+    using SomeFunExternalDependency
+    ```
 
     Don't worry about forgetting to install dependencies---if you do, Julia will show you an error with prompt for what to do:
-        ```julia
-        julia> using SomeFunPackageYouForgotToInstallFirst
-        ERROR: ArgumentError: Package SomeFunPackageYouForgotToInstallFirst not found in current path:
-        - Run `import Pkg; Pkg.add("SomeFunPackageYouForgotToInstallFirst")` to install the SomeFunPackageYouForgotToInstallFirst package.
-        ```
+
+    ```julia
+    julia> using SomeFunPackageYouForgotToInstallFirst
+    ERROR: ArgumentError: Package SomeFunPackageYouForgotToInstallFirst not found in current path:
+    - Run `import Pkg; Pkg.add("SomeFunPackageYouForgotToInstallFirst")` to install the SomeFunPackageYouForgotToInstallFirst package.
+    ```

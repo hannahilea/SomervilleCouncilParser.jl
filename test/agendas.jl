@@ -1,10 +1,9 @@
-
 @testset "`validate_date`" begin
     @test validate_date("6/1/2017") == "6/1/2017"
     @test validate_date("06/01/2017") == "6/1/2017"
     @test validate_date("6-1-2017") == "6/1/2017" # i guess we'll handle dashes
     @test validate_date(Date(2017, 6, 1)) == "6/1/2017"
-    
+
     @test_throws ArgumentError validate_date("5/32/2017") # invalid date rounds to next month
     @test_throws ArgumentError validate_date("6/1/17") # full year required
     @test_throws ArgumentError validate_date("June 1 2017") # no spelled-out parsing handled
@@ -18,6 +17,7 @@ end
     @test m.name == "Public Health and Public Safety Committee"
     @test m.date == DateTime("2020-06-01T18:00:00")
     @test isa(m.date, DateTime)
+    @test isa(m.id, Int)
     @test m.link == "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3163"
 end
 
@@ -31,7 +31,7 @@ end
     @test nrow(items) == 4
 
     @test count(items.is_heading) == 3
-    @test names(items) == ["is_heading", "item", "content"]
+    @test names(items) == ["item", "content", "is_heading"]
 
     @test request_agenda_items(meeting_link) == request_agenda_items(3163)
     @test request_agenda_items("3163") == request_agenda_items(3163)
@@ -40,6 +40,8 @@ end
     meeting_link2 = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3421"
     items = SomervilleCouncilParser.request_agenda_items(meeting_link2)
     @test nrow(items) == 0
+
+    #TODO: add all subheadings from request_agenda_items(3427)
 end
 
 @testset "`get_agenda_items`" begin
@@ -55,10 +57,10 @@ end
     @test length(readdir(cache_dir)) == 0
     items = get_agenda_items(meeting_link; cache_dir)
     @test length(readdir(cache_dir)) == 1
-    
+
     # When cached item exists, load that
     # ...to test, override table saved at cache path
-    junk = DataFrame(a=[1, 2, 3], b=[:a, :b, :c])
+    junk = DataFrame(; a=[1, 2, 3], b=[:a, :b, :c])
     p = only(readdir(cache_dir; join=true))
     Arrow.write(p, junk)
     cached_items = get_agenda_items(meeting_link; cache_dir)
@@ -80,6 +82,7 @@ end
     cache_dir = mktempdir()
     x = search_agendas_for_content("9/1/2021", "10/1/2021", ["dpw"]; cache_dir)
     @test nrow(x.items) == 4
-    @test nrow(x.meetings) == 13 
+    @test nrow(x.meetings) == 13
     @test all(isnothing.(x.meetings.failed_parsing))
+    @test isnothing(display_items_by_meeting(x.items))
 end

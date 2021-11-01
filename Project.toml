@@ -1,7 +1,7 @@
 name = "SomervilleCouncilParser"
 uuid = "4d1845a8-7d30-4f22-8517-ff394b07a1a5"
 authors = ["hannahilea <hannahilea@users.noreply.github.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"

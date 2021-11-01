@@ -80,9 +80,9 @@ For more examples, see the [documentation](https://hannahilea.github.io/Somervil
 
 ## Getting started
 For installation instructions and additional examples, read [the docs](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable):
-    - [Beginner's guide to getting started](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable/new_users)
-    - [Examples](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable/examples)
-    - [API documentation](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable/api)
+  - [Beginner's guide to getting started](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable/new_users)
+  - [Examples](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable/examples)
+  - [API documentation](https://hannahilea.github.io/SomervilleCouncilParser.jl/stable/api)
 
 ## Feature requests, bugs, and query assistance
 Do you have an idea for a new feature? Have you found a bug? Do you need help formatting (or even running) a query? Please [file an issue](https://github.com/hannahilea/SomervilleCouncilParser.jl/issues/new/choose) or open a pull request!

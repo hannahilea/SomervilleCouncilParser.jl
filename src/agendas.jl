@@ -2,8 +2,8 @@
     validate_date(date::AbstractString)
     validate_date(date::Date)
 
-Returns `month/day/year` string in format accepted by city 
-calendar. Valid input formats are `"<M>/<D>/<YYYY>"` (`6/1/2017`, `06/01/2017`) 
+Returns `month/day/year` string in format accepted by city
+calendar. Valid input formats are `"<M>/<D>/<YYYY>"` (`6/1/2017`, `06/01/2017`)
 or `Date(yyyy,mm,dd)` (`Date(2017,6,1)`).
 """
 function validate_date(date::AbstractString)
@@ -44,7 +44,8 @@ function request_meetings(start_date, stop_date)
                          link = joinpath("http://somervillecityma.iqm2.com",
                                          elements(m)[1]["href"][2:end])
                          date = DateTime(deets[1], agenda_dateformat)
-                         return (; name, date, link)
+                         id = parse(Int, split(link, "ID=")[2])
+                         return (; name, date, id, link)
                      end)
 end
 
@@ -62,7 +63,7 @@ Return `DataFrame` of agenda items from meeting `meeting_link`. `meeting_link` c
 the full link (`"http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=2570"`) or
 the meeting ID (`2570`).
 
-When `cache_dir` is not empty, agendas are read from the cache if they've been previously 
+When `cache_dir` is not empty, agendas are read from the cache if they've been previously
 downloaded. If they do not exist in the cache, they'll be added to it.
 """
 function get_agenda_items(meeting_link; cache_dir=nothing)
@@ -112,7 +113,7 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
     end
     filter!(!isnothing, items)
 
-    # Headings have `name` "strong"; main items are numbered ("number : description"). 
+    # Headings have `name` "strong"; main items are numbered ("number : description").
     # Remove items that are not headings or top-level items.
     filter!(i -> i.name == "strong" || contains(i.content, ":"), items)
 
@@ -122,17 +123,27 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
         return df
     end
 
-    _item_number = (n, c) -> n == "strong" ? nothing : split(c, " :")[1]
-    transform!(df, [:name, :content] => ByRow(_item_number) => :item)
+    _item_number = (n, c) -> begin
+        n == "strong" && return (nothing, c) ## Heading
+        try
+            num, details = split(c, " : "; limit=2)
+            num = parse(Int, num)
+            return num, details
+        catch
+            return (nothing, c)
+        end
+    end
+
+    transform!(df, [:name, :content] => ByRow(_item_number) => [:item, :content])
     transform!(df, [:name] => ByRow(==("strong")) => :is_heading)
-    select!(df, [:is_heading, :item, :content])
+    select!(df, [:item, :content, :is_heading])
     return df
 end
 
 """
     filter_agenda(agenda::DataFrame, search_terms; case_invariant=true)
 
-Return copy of `agenda` filtered such that only rows containing an item from 
+Return copy of `agenda` filtered such that only rows containing an item from
 `search_terms` in the description of the item will be preserved. When `case_invariant`
 is true, ignores uppercase vs lowercase letters.
 """
@@ -144,7 +155,7 @@ function filter_agenda(agenda::DataFrame, search_terms; case_invariant=true)
     check_item = (is_heading, content) -> begin
         is_heading && return false
         case_invariant && (content = lowercase(content))
-        return any(occursin(p, lowercase(content)) for p in search_terms)
+        return any(occursin(p, content) for p in search_terms)
     end
     return filter([:is_heading, :content] => check_item, agenda)
 end
@@ -154,7 +165,7 @@ end
 #####
 
 """
-    search_agendas_for_content(start_date, stop_date, search_terms; 
+    search_agendas_for_content(start_date, stop_date, search_terms;
                                cache_dir=nothing, case_invariant=true)
 
 Return `NamedTuple` containing `meetings` (a `DataFrame` of meetings found within the given `start_date`-`stop_date`
@@ -163,7 +174,7 @@ range) and `items` (a `DataFrame` of all items containing at least one of the `s
 function search_agendas_for_content(start_date, stop_date, search_terms; cache_dir=nothing,
                                     case_invariant=true)
     meetings = request_meetings(start_date, stop_date)
-    @info """Found agendas for $(nrow(meetings)) meetings between $(start_date) and $(stop_date)! 
+    @info """Found agendas for $(nrow(meetings)) meetings between $(start_date) and $(stop_date)!
              Searching their agendas for $(search_terms)..."""
 
     relevant_items = DataFrame()

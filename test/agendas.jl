@@ -18,6 +18,7 @@ end
     @test m.name == "Public Health and Public Safety Committee"
     @test m.date == DateTime("2020-06-01T18:00:00")
     @test isa(m.date, DateTime)
+    @test isa(m.id, Int)
     @test m.link == "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3163"
 end
 
@@ -82,4 +83,5 @@ end
     @test nrow(x.items) == 4
     @test nrow(x.meetings) == 13
     @test all(isnothing.(x.meetings.failed_parsing))
+    @test isnothing(display_items_by_meeting(x.items))
 end

@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    tags: '*'
     paths:
       - '.github/workflows/docs.yml'
       - 'src/**'

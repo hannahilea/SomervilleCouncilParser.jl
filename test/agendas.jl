@@ -1,4 +1,3 @@
-
 @testset "`validate_date`" begin
     @test validate_date("6/1/2017") == "6/1/2017"
     @test validate_date("06/01/2017") == "6/1/2017"
@@ -32,7 +31,7 @@ end
     @test nrow(items) == 4
 
     @test count(items.is_heading) == 3
-    @test names(items) == ["is_heading", "item", "content"]
+    @test names(items) == ["item", "content", "is_heading"]
 
     @test request_agenda_items(meeting_link) == request_agenda_items(3163)
     @test request_agenda_items("3163") == request_agenda_items(3163)
@@ -41,6 +40,8 @@ end
     meeting_link2 = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3421"
     items = SomervilleCouncilParser.request_agenda_items(meeting_link2)
     @test nrow(items) == 0
+
+    #TODO: add all subheadings from request_agenda_items(3427)
 end
 
 @testset "`get_agenda_items`" begin

@@ -15,43 +15,44 @@ using SomervilleCouncilParser
 meetings = request_meetings("10/1/2021", "10/31/2021")
 ```
 Because this function (like many) returns a `DataFrame`, you can use any of the `DataFrame` operations to act on it:
-- Filtering for a certain meeting type
+#### ...filtering for a certain meeting type
+```@example 1
+full_council_meetings = filter(:name => ==("City Council"), meetings)
+```
 
-    ```@example 1
-    full_council_meetings = filter(:name => ==("City Council"), meetings)
-    ```
+#### ...sorting by date (most to least recent):
+```@example 1
+sort(meetings, [:date]; rev=true)
+```
 
-- Sorting by date (most to least recent):
-
-    ```@example 1
-    sort(meetings, [:date]; rev=true)
-    ```
-
-- Find all dates that held more than one meeting
-
-    ```@example 1
-    using Dates
-    using DataFrames
-    transform!(meetings, :date => ByRow(Date) => :day)
-    gdf = filter(g -> nrow(g) > 1, groupby(meetings, :day))
-    combine(gdf, nrow => :num_meetings)
-    ```
+#### ...finding all dates that held more than one meeting
+```@example 1
+using Dates
+using DataFrames
+transform!(meetings, :date => ByRow(Date) => :day)
+gdf = filter(g -> nrow(g) > 1, groupby(meetings, :day))
+combine(gdf, nrow => :num_meetings)
+```
 
 To learn more about working with `DataFrame`s, see [the official DataFrames.jl docs](https://dataframes.juliadata.org/stable/) or [this handy blog post](https://bkamins.github.io/julialang/2020/12/24/minilanguage.html).
 
 ### Get the agenda items from a single meeting
 If you want to see the list of agenda items from one of those meetings, you can request it by meeting id (as listed in the above `meetings` table)
 ```@example 1
-agenda = get_agenda_items(3427);
+agenda = get_agenda_items(3427)
+first(agenda)
 ```
 or from the full meeting link (which can be gotten from either the `meetings` table or when browsing the Council website directly)
 ```@example 1
-agenda = get_agenda_items("http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3427");
+agenda = get_agenda_items("http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3427")
+first(agenda)
 ```
 or from a link directly from the table
 ```@example 1
 example_meeting = last(meetings)
-agenda = get_agenda_items(example_meeting.link);
+@info example_meeting.link
+agenda = get_agenda_items(example_meeting.link)
+first(agenda)
 ```
 
 ### Search the agenda items from a single meeting
@@ -84,7 +85,7 @@ If you rerun the same search, it should take much less time (as it no longer has
 results = search_agendas_for_content("9/1/2021", "10/1/2021", ["dpw"]; cache_dir=cache_directory)
 ```
 How many meetings and items did this include?
-```
+```@example 1
 print(nrow(results.meetings), " meetings")
 print(nrow(results.items), " relevant items")
 ```

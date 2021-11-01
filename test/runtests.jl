@@ -14,7 +14,7 @@ include("agendas.jl")
     @test length(names(meetings)) == 3
     @test length(unique(meetings.name)) == 10
 
-    results = search_agendas_for_content("9/1/2021", "9/30/2021", ["fluff"]);
+    results = search_agendas_for_content("9/1/2021", "9/30/2021", ["fluff"])
     @test nrow(results.meetings) == 13
     @test length(names(results.meetings)) == 6
     @test nrow(results.items) == 1

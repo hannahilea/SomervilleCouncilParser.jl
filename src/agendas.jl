@@ -9,7 +9,8 @@ or `Date(yyyy,mm,dd)` (`Date(2017,6,1)`).
 function validate_date(date::AbstractString)
     d_split = replace(date, "-" => "/")
     d_split = split(d_split, "/")
-    length(d_split) == 3 || throw(ArgumentError("Invalid date: `$date`. Must take form mm-dd-yyyy or mm/dd/yyyy"))
+    length(d_split) == 3 ||
+        throw(ArgumentError("Invalid date: `$date`. Must take form mm-dd-yyyy or mm/dd/yyyy"))
     y = d_split[3]
     length(y) < 4 && throw(ArgumentError("Full 4-digit year required (`$y` invalid)"))
     y = parse(Int, y)
@@ -38,12 +39,13 @@ function request_meetings(start_date, stop_date)
     end
     meeting_nodes = findall("//div[@class='RowLink']", html)
     return DataFrame(map(meeting_nodes) do m
-        deets = split(elements(m)[1]["title"], "\r")
-        name = replace(deets[3], "Board:\t" => "")
-        link = joinpath("http://somervillecityma.iqm2.com", elements(m)[1]["href"][2:end])
-        date = DateTime(deets[1], agenda_dateformat)
-        return (; name, date, link)
-    end)
+                         deets = split(elements(m)[1]["title"], "\r")
+                         name = replace(deets[3], "Board:\t" => "")
+                         link = joinpath("http://somervillecityma.iqm2.com",
+                                         elements(m)[1]["href"][2:end])
+                         date = DateTime(deets[1], agenda_dateformat)
+                         return (; name, date, link)
+                     end)
 end
 
 #####
@@ -69,12 +71,12 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
     # Figure out caching info
     id = replace(meeting_link, agenda_url_prefix => "")
     cache_path = joinpath(cache_dir, "$(cache_version)_agenda_$(id).arrow")
-    if isnothing(tryparse(Int, id)) 
+    if isnothing(tryparse(Int, id))
         @warn "Unexpected agenda meeting agenda id; may yield wonky cache path!" meeting_link id cache_path
     end
 
     # Has it been cached before?
-    if !isfile(cache_path) 
+    if !isfile(cache_path)
         items = request_agenda_items(meeting_link)
         Arrow.write(cache_path, items)
     end
@@ -88,7 +90,7 @@ Return `DataFrame` of agenda items from meeting `meeting_link`. `meeting_link` c
 the full link (`"http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=2570"`) or
 the meeting ID (`2570`).
 """
-function request_agenda_items(meeting_id; verbose=false) 
+function request_agenda_items(meeting_id; verbose=false)
     return request_agenda_items(agenda_url_prefix * string(meeting_id); verbose)
 end
 
@@ -97,7 +99,7 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
         meeting_link = agenda_url_prefix * meeting_link
         @warn "Inserting missing agenda prefix" meeting_link
     end
-    
+
     r = HTTP.get(meeting_link)
     html = with_logger(NullLogger()) do
         return root(parsehtml(String(r.body)))
@@ -119,7 +121,7 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
         verbose && (@warn "Meeting has no items..." meeting_link)
         return df
     end
-    
+
     _item_number = (n, c) -> n == "strong" ? nothing : split(c, " :")[1]
     transform!(df, [:name, :content] => ByRow(_item_number) => :item)
     transform!(df, [:name] => ByRow(==("strong")) => :is_heading)
@@ -158,8 +160,8 @@ end
 Return `NamedTuple` containing `meetings` (a `DataFrame` of meetings found within the given `start_date`-`stop_date`
 range) and `items` (a `DataFrame` of all items containing at least one of the `search_terms`).
 """
-function search_agendas_for_content(start_date, stop_date, search_terms; 
-                                    cache_dir=nothing, case_invariant=true)
+function search_agendas_for_content(start_date, stop_date, search_terms; cache_dir=nothing,
+                                    case_invariant=true)
     meetings = request_meetings(start_date, stop_date)
     @info """Found agendas for $(nrow(meetings)) meetings between $(start_date) and $(stop_date)! 
              Searching their agendas for $(search_terms)..."""
@@ -176,24 +178,26 @@ function search_agendas_for_content(start_date, stop_date, search_terms;
             items = filter_agenda(items, search_terms; case_invariant)
             nrow(items) == 0 && return (0, total_items, nothing)
 
-            insertcols!(items, :meeting => name, 
-                               :date => date, 
-                               :meeting_link => link)
+            insertcols!(items, :meeting => name, :date => date, :meeting_link => link)
             relevant_items = vcat(relevant_items, items)
             return (nrow(items), total_items, nothing)
         catch e
             return (0, total_items, e)
         end
-        
+
         return true
     end
-    transform!(meetings, [:link, :date, :name] => ByRow(_get_relevant_items) => [:num_items, :total_items, :failed_parsing])
+    transform!(meetings,
+               [:link, :date, :name] => ByRow(_get_relevant_items) => [:num_items,
+                                                                       :total_items,
+                                                                       :failed_parsing])
 
     # Summarize
     num_rel_m = nrow(relevant_items) == 0 ? 0 : length(unique(relevant_items.meeting_link))
     num_failed = nrow(meetings) - count(isnothing.(meetings.failed_parsing))
     num_irrel = nrow(meetings) - num_failed - num_rel_m
-    failed = num_failed == 0 ? "" : "\n  -> $(num_failed) meetings that failed parsing (may be relevant)"
+    failed = num_failed == 0 ? "" :
+             "\n  -> $(num_failed) meetings that failed parsing (may be relevant)"
     @info """For the $(nrow(meetings)) meetings between $(start_date) and $(stop_date):
             -> $(length(unique(relevant_items.meeting_link))) meeting(s) with a total of $(nrow(relevant_items)) relevant item(s)
             -> $(num_irrel) meeting(s) with no relevant items$failed

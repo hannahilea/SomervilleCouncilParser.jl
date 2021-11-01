@@ -4,7 +4,7 @@
     @test validate_date("06/01/2017") == "6/1/2017"
     @test validate_date("6-1-2017") == "6/1/2017" # i guess we'll handle dashes
     @test validate_date(Date(2017, 6, 1)) == "6/1/2017"
-    
+
     @test_throws ArgumentError validate_date("5/32/2017") # invalid date rounds to next month
     @test_throws ArgumentError validate_date("6/1/17") # full year required
     @test_throws ArgumentError validate_date("June 1 2017") # no spelled-out parsing handled
@@ -55,10 +55,10 @@ end
     @test length(readdir(cache_dir)) == 0
     items = get_agenda_items(meeting_link; cache_dir)
     @test length(readdir(cache_dir)) == 1
-    
+
     # When cached item exists, load that
     # ...to test, override table saved at cache path
-    junk = DataFrame(a=[1, 2, 3], b=[:a, :b, :c])
+    junk = DataFrame(; a=[1, 2, 3], b=[:a, :b, :c])
     p = only(readdir(cache_dir; join=true))
     Arrow.write(p, junk)
     cached_items = get_agenda_items(meeting_link; cache_dir)
@@ -80,6 +80,6 @@ end
     cache_dir = mktempdir()
     x = search_agendas_for_content("9/1/2021", "10/1/2021", ["dpw"]; cache_dir)
     @test nrow(x.items) == 4
-    @test nrow(x.meetings) == 13 
+    @test nrow(x.meetings) == 13
     @test all(isnothing.(x.meetings.failed_parsing))
 end

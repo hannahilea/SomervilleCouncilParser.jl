@@ -1,9 +1,13 @@
 using Test
 using SomervilleCouncilParser
-using SomervilleCouncilParser: validate_date, request_agenda_items
-using DataFrames, Arrow, Dates
+using SomervilleCouncilParser: validate_date, request_agenda_items, agenda_version
+using DataFrames, Dates
+using Legolas
 
-include("agendas.jl")
+const TEST_ASSETS = joinpath(pkgdir(SomervilleCouncilParser), "test", "assets")
+
+include("meeting.jl")
+include("agenda.jl")
 
 # If any of the following examples needs adjusting, be sure to update the
 # README.md examples! Should probably be handled automatically by,

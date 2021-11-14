@@ -1,30 +1,3 @@
-@testset "`validate_date`" begin
-    @test validate_date("6/1/2017") == "6/1/2017"
-    @test validate_date("06/01/2017") == "6/1/2017"
-    @test validate_date("6-1-2017") == "6/1/2017" # i guess we'll handle dashes
-    @test validate_date(Date(2017, 6, 1)) == "6/1/2017"
-
-    @test_throws ArgumentError validate_date("5/32/2017") # invalid date rounds to next month
-    @test_throws ArgumentError validate_date("6/1/17") # full year required
-    @test_throws ArgumentError validate_date("June 1 2017") # no spelled-out parsing handled
-    @test_throws ArgumentError validate_date("1 June 2017") # no spelled-out parsing handled
-end
-
-@testset "`request_meetings`" begin
-    meetings = request_meetings("6/1/2020", "6/1/2020")
-    @test nrow(meetings) == 2
-    m = first(meetings)
-    @test m.name == "Public Health and Public Safety Committee"
-    @test m.date == DateTime("2020-06-01T18:00:00")
-    @test isa(m.date, DateTime)
-    @test isa(m.id, Int)
-    @test m.link == "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3163"
-end
-
-#####
-## Agendas
-#####
-
 @testset "`request_agenda_items`" begin
     meeting_link = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3163"
     items = SomervilleCouncilParser.request_agenda_items(meeting_link)
@@ -40,8 +13,6 @@ end
     meeting_link2 = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3421"
     items = SomervilleCouncilParser.request_agenda_items(meeting_link2)
     @test nrow(items) == 0
-
-    #TODO: add all subheadings from request_agenda_items(3427)
 end
 
 @testset "`get_agenda_items`" begin
@@ -58,11 +29,20 @@ end
     items = get_agenda_items(meeting_link; cache_dir)
     @test length(readdir(cache_dir)) == 1
 
-    # When cached item exists, load that
-    # ...to test, override table saved at cache path
-    junk = DataFrame(; a=[1, 2, 3], b=[:a, :b, :c])
-    p = only(readdir(cache_dir; join=true))
-    Arrow.write(p, junk)
+    # Test that current caching hasn't changed
+    # If this test _fails_, need to (a) bump `agenda_version` and (b) resave current
+    # version of cached asset:
+    # get_agenda_items(meeting_link; cache_dir=TEST_ASSETS) # Uncomment to save new version
+    test_agenda_path = SomervilleCouncilParser.agenda_cache_path(TEST_ASSETS, 3163)
+    @test isfile(test_agenda_path)
+    previous_items = DataFrame(Legolas.read(test_agenda_path))
+    @test previous_items == items
+
+    # When cached item exists, load it!
+    # ...to test, override table saved at cache path and make sure _that's_ what loads
+    junk = DataFrame([Agenda(; item=3, content="foo")])
+    p = only(readdir(joinpath(cache_dir, "v$(agenda_version)"); join=true))
+    Legolas.write(p, junk, Legolas.Schema("agenda@1"))
     cached_items = get_agenda_items(meeting_link; cache_dir)
     @test cached_items == junk
 end

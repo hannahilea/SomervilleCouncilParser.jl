@@ -1,60 +1,13 @@
-"""
-    validate_date(date::AbstractString)
-    validate_date(date::Date)
+const agenda_url_prefix = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID="
 
-Returns `month/day/year` string in format accepted by city
-calendar. Valid input formats are `"<M>/<D>/<YYYY>"` (`6/1/2017`, `06/01/2017`)
-or `Date(yyyy,mm,dd)` (`Date(2017,6,1)`).
-"""
-function validate_date(date::AbstractString)
-    d_split = replace(date, "-" => "/")
-    d_split = split(d_split, "/")
-    length(d_split) == 3 ||
-        throw(ArgumentError("Invalid date: `$date`. Must take form mm-dd-yyyy or mm/dd/yyyy"))
-    y = d_split[3]
-    length(y) < 4 && throw(ArgumentError("Full 4-digit year required (`$y` invalid)"))
-    y = parse(Int, y)
-    m = parse(Int, d_split[1])
-    d = parse(Int, d_split[2])
-    return validate_date(Date(y, m, d))
+const agenda_version = 1
+const agenda_schema = Legolas.Schema("agenda", agenda_version)
+const Agenda = Legolas.@row("agenda@1", item::Union{Int,Nothing,Missing}, content::String,
+                            is_heading::Bool = isnothing(item))
+
+function agenda_cache_path(cache_dir, id)
+    return joinpath(cache_dir, "v$(agenda_version)", "agenda-$(id).arrow")
 end
-
-validate_date(date::Date) = string(month(date), "/", day(date), "/", year(date))
-
-agenda_dateformat = dateformat"E, U d, YYYY  H:MM p"
-
-"""
-    request_meetings(start_date, stop_date)
-
-Return list of meetings that occurred (or will occur) between `start_date` and `stop_date`.
-"""
-function request_meetings(start_date, stop_date)
-    start = validate_date(start_date)
-    stop = validate_date(stop_date)
-    url = "http://somervillecityma.iqm2.com/Citizens/calendar.aspx?View=List&From=$start&To=$stop"
-    @debug "Requesting $url" start stop
-    r = HTTP.get(url)
-    html = with_logger(NullLogger()) do
-        return root(parsehtml(String(r.body)))
-    end
-    meeting_nodes = findall("//div[@class='RowLink']", html)
-    return DataFrame(map(meeting_nodes) do m
-                         deets = split(elements(m)[1]["title"], "\r")
-                         name = replace(deets[3], "Board:\t" => "")
-                         link = joinpath("http://somervillecityma.iqm2.com",
-                                         elements(m)[1]["href"][2:end])
-                         date = DateTime(deets[1], agenda_dateformat)
-                         id = parse(Int, split(link, "ID=")[2])
-                         return (; name, date, id, link)
-                     end)
-end
-
-#####
-## Parsing agendas
-#####
-
-agenda_url_prefix = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID="
-cache_version = "v1"
 
 """
     get_agenda_items(meeting_link; cache_dir=nothing)
@@ -71,7 +24,7 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
 
     # Figure out caching info
     id = replace(meeting_link, agenda_url_prefix => "")
-    cache_path = joinpath(cache_dir, "$(cache_version)_agenda_$(id).arrow")
+    cache_path = agenda_cache_path(cache_dir, id)
     if isnothing(tryparse(Int, id))
         @warn "Unexpected agenda meeting agenda id; may yield wonky cache path!" meeting_link id cache_path
     end
@@ -79,9 +32,10 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
     # Has it been cached before?
     if !isfile(cache_path)
         items = request_agenda_items(meeting_link)
-        Arrow.write(cache_path, items)
+        mkpath(dirname(cache_path))
+        Legolas.write(cache_path, items, agenda_schema)
     end
-    return DataFrame(Arrow.Table(cache_path))
+    return DataFrame(Legolas.read(cache_path))
 end
 
 """
@@ -117,27 +71,14 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
     # Remove items that are not headings or top-level items.
     filter!(i -> i.name == "strong" || contains(i.content, ":"), items)
 
-    df = DataFrame(map(i -> (; name=i.name, content=i.content), items))
-    if nrow(df) == 0
-        verbose && (@warn "Meeting has no items..." meeting_link)
-        return df
+    items = map(items) do i
+        i.name == "strong" && return Agenda(; item=nothing, i.content)
+        x = split(i.content, " : "; limit=2)
+        item = tryparse(Int, x[1])
+        content = length(x) == 2 && !isnothing(item) ? x[2] : x[1]
+        return Agenda(; item, content)
     end
-
-    _item_number = (n, c) -> begin
-        n == "strong" && return (nothing, c) ## Heading
-        try
-            num, details = split(c, " : "; limit=2)
-            num = parse(Int, num)
-            return num, details
-        catch
-            return (nothing, c)
-        end
-    end
-
-    transform!(df, [:name, :content] => ByRow(_item_number) => [:item, :content])
-    transform!(df, [:name] => ByRow(==("strong")) => :is_heading)
-    select!(df, [:item, :content, :is_heading])
-    return df
+    return DataFrame(items)
 end
 
 """

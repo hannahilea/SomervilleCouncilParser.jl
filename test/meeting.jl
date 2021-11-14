@@ -24,7 +24,8 @@ end
     # Test that current meeting serialization hasn't changed
     # If this test _fails_, need to (a) bump `meeting_version` and (b) resave current
     # version of cached meeting asset:
-    test_meeting_path = joinpath(TEST_ASSETS, "v$(SomervilleCouncilParser.meeting_version)", "meeting.arrow")
+    test_meeting_path = joinpath(TEST_ASSETS, "v$(SomervilleCouncilParser.meeting_version)",
+                                 "meeting.arrow")
     # Legolas.write(test_meeting_path, DataFrame(m), SomervilleCouncilParser.meeting_schema)  # Uncomment to save new version
     @test isfile(test_meeting_path)
     previous_mtg = DataFrame(Legolas.read(test_meeting_path))

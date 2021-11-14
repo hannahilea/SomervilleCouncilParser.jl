@@ -25,10 +25,7 @@ agenda_dateformat = dateformat"E, U d, YYYY  H:MM p"
 
 const meeting_version = 1
 const meeting_schema = Legolas.Schema("meeting", meeting_version)
-const Meeting = Legolas.@row("meeting@1",
-                             name::AbstractString,
-                             date::DateTime,
-                             id::Int,
+const Meeting = Legolas.@row("meeting@1", name::AbstractString, date::DateTime, id::Int,
                              link::AbstractString)
 
 """

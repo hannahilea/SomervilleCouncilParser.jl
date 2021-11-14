@@ -2,12 +2,12 @@ const agenda_url_prefix = "http://somervillecityma.iqm2.com/Citizens/Detail_Meet
 
 const agenda_version = 1
 const agenda_schema = Legolas.Schema("agenda", agenda_version)
-const Agenda = Legolas.@row("agenda@1",
-                            item::Union{Int,Nothing,Missing},
-                            content::String,
+const Agenda = Legolas.@row("agenda@1", item::Union{Int,Nothing,Missing}, content::String,
                             is_heading::Bool = isnothing(item))
 
-agenda_cache_path(cache_dir, id) = joinpath(cache_dir, "v$(agenda_version)", "agenda-$(id).arrow")
+function agenda_cache_path(cache_dir, id)
+    return joinpath(cache_dir, "v$(agenda_version)", "agenda-$(id).arrow")
+end
 
 """
     get_agenda_items(meeting_link; cache_dir=nothing)

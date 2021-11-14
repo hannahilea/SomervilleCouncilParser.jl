@@ -14,11 +14,21 @@ end
     meetings = request_meetings("6/1/2020", "6/1/2020")
     @test nrow(meetings) == 2
     m = first(meetings)
+    r = Meeting(m) # Just test that this is possible
     @test m.name == "Public Health and Public Safety Committee"
     @test m.date == DateTime("2020-06-01T18:00:00")
     @test isa(m.date, DateTime)
     @test isa(m.id, Int)
     @test m.link == "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3163"
+
+    # Test that current meeting serialization hasn't changed
+    # If this test _fails_, need to (a) bump `meeting_version` and (b) resave current
+    # version of cached meeting asset:
+    test_meeting_path = joinpath(TEST_ASSETS, "v$(SomervilleCouncilParser.meeting_version)", "meeting.arrow")
+    # Legolas.write(test_meeting_path, DataFrame(m), SomervilleCouncilParser.meeting_schema)  # Uncomment to save new version
+    @test isfile(test_meeting_path)
+    previous_mtg = DataFrame(Legolas.read(test_meeting_path))
+    @test previous_mtg == DataFrame(m)
 end
 
 #####
@@ -40,8 +50,6 @@ end
     meeting_link2 = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3421"
     items = SomervilleCouncilParser.request_agenda_items(meeting_link2)
     @test nrow(items) == 0
-
-    #TODO: add all subheadings from request_agenda_items(3427)
 end
 
 @testset "`get_agenda_items`" begin
@@ -58,11 +66,20 @@ end
     items = get_agenda_items(meeting_link; cache_dir)
     @test length(readdir(cache_dir)) == 1
 
-    # When cached item exists, load that
-    # ...to test, override table saved at cache path
-    junk = DataFrame(; a=[1, 2, 3], b=[:a, :b, :c])
-    p = only(readdir(cache_dir; join=true))
-    Arrow.write(p, junk)
+    # Test that current caching hasn't changed
+    # If this test _fails_, need to (a) bump `agenda_version` and (b) resave current
+    # version of cached asset:
+    # get_agenda_items(meeting_link; cache_dir=TEST_ASSETS) # Uncomment to save new version
+    test_agenda_path = SomervilleCouncilParser.agenda_cache_path(TEST_ASSETS, 3163)
+    @test isfile(test_agenda_path)
+    previous_items = DataFrame(Legolas.read(test_agenda_path))
+    @test previous_items == items
+
+    # When cached item exists, load it!
+    # ...to test, override table saved at cache path and make sure _that's_ what loads
+    junk = DataFrame([Agenda(; item=3, content="foo")])
+    p = only(readdir(joinpath(cache_dir, "v$(agenda_version)"); join=true))
+    Legolas.write(p, junk, Legolas.Schema("agenda@1"))
     cached_items = get_agenda_items(meeting_link; cache_dir)
     @test cached_items == junk
 end

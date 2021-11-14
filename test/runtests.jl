@@ -1,7 +1,10 @@
 using Test
 using SomervilleCouncilParser
-using SomervilleCouncilParser: validate_date, request_agenda_items
-using DataFrames, Arrow, Dates
+using SomervilleCouncilParser: validate_date, request_agenda_items, agenda_version
+using DataFrames, Dates
+using Legolas
+
+const TEST_ASSETS = joinpath(pkgdir(SomervilleCouncilParser), "test", "assets")
 
 include("agendas.jl")
 

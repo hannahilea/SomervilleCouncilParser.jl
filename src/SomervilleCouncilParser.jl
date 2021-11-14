@@ -9,8 +9,11 @@ using Legolas
 using DataFrames
 using ProgressMeter
 
-include("agendas.jl")
-export request_meetings, get_agenda_items, filter_agenda, search_agendas_for_content,
-       display_items_by_meeting, Agenda, Meeting
+include("meeting.jl")
+export request_meetings, Meeting
+
+include("agenda.jl")
+export get_agenda_items, filter_agenda, search_agendas_for_content, display_items_by_meeting,
+       Agenda
 
 end # module

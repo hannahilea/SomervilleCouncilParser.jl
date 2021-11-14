@@ -6,7 +6,8 @@ using Legolas
 
 const TEST_ASSETS = joinpath(pkgdir(SomervilleCouncilParser), "test", "assets")
 
-include("agendas.jl")
+include("meeting.jl")
+include("agenda.jl")
 
 # If any of the following examples needs adjusting, be sure to update the
 # README.md examples! Should probably be handled automatically by,

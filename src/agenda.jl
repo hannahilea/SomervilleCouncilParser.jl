@@ -1,9 +1,12 @@
 const agenda_url_prefix = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID="
 
-const agenda_version = 1
+const agenda_version = 2
 const agenda_schema = Legolas.Schema("agenda", agenda_version)
-const Agenda = Legolas.@row("agenda@1", item::Union{Int,Nothing,Missing}, content::String,
-                            is_heading::Bool = isnothing(item))
+const Agenda = Legolas.@row("agenda@2",
+                            id::Union{Int,Nothing,Missing},
+                            content::String,
+                            type::Symbol,
+                            link::Union{String,Nothing})
 
 function agenda_cache_path(cache_dir, id)
     return joinpath(cache_dir, "v$(agenda_version)", "agenda-$(id).arrow")
@@ -69,14 +72,18 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
 
     # Headings have `name` "strong"; main items are numbered ("number : description").
     # Remove items that are not headings or top-level items.
+    #TODO: keep attachments! warn about other stuff?
     filter!(i -> i.name == "strong" || contains(i.content, ":"), items)
 
     items = map(items) do i
-        i.name == "strong" && return Agenda(; item=nothing, i.content)
+        i.name == "strong" && return Agenda(; id=nothing, i.content, type=:heading, link="TODO")
+        #TODO: subullet doc attachment??
         x = split(i.content, " : "; limit=2)
-        item = tryparse(Int, x[1])
-        content = length(x) == 2 && !isnothing(item) ? x[2] : x[1]
-        return Agenda(; item, content)
+        id = tryparse(Int, x[1])
+        content = length(x) == 2 && !isnothing(id) ? x[2] : x[1]
+        link = "TODO" #TODO
+        type = isnothing(id) ? :item : :attachment #TODO make sure this is the only other case....
+        return Agenda(; id, content, type, link)
     end
     return DataFrame(items)
 end

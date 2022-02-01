@@ -1,12 +1,14 @@
-const agenda_url_prefix = "$(SITE_ROOT)/Detail_Meeting.aspx?ID="
+const AGENDA_URL_PREFIX = "$(SITE_ROOT)/Detail_Meeting.aspx?ID="
+
+#TODO: Add "Agenda" in its own right? Currently have "Meeting" and AgendaItem
 
 const agenda_version = 2
 const agenda_schema = Legolas.Schema("agenda", agenda_version)
-const Agenda = Legolas.@row("agenda@2",
-                            id::Union{Int,Nothing,Missing},
+const Agenda = Legolas.@row("agenda@2",     #TODO: rename to AgendaItem
+                            id::Union{Int,Missing},
                             content::String,
                             type::Symbol,
-                            link::Union{String,Nothing})
+                            link::Union{String,Missing})
 
 function agenda_cache_path(cache_dir, id)
     return joinpath(cache_dir, "v$(agenda_version)", "agenda-$(id).arrow")
@@ -26,7 +28,7 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
     isnothing(cache_dir) && return request_agenda_items(meeting_link)
 
     # Figure out caching info
-    id = replace(meeting_link, agenda_url_prefix => "")
+    id = replace(meeting_link, AGENDA_URL_PREFIX => "")
     cache_path = agenda_cache_path(cache_dir, id)
     if isnothing(tryparse(Int, id))
         @warn "Unexpected agenda meeting agenda id; may yield wonky cache path!" meeting_link id cache_path
@@ -38,7 +40,7 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
         mkpath(dirname(cache_path))
         Legolas.write(cache_path, items, agenda_schema)
     end
-    return DataFrame(Legolas.read(cache_path))
+    return DataFrame(Legolas.read(cache_path)) #;validate=false)
 end
 
 """
@@ -49,12 +51,12 @@ the full link (`"http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?I
 the meeting ID (`2570`).
 """
 function request_agenda_items(meeting_id; verbose=false)
-    return request_agenda_items(agenda_url_prefix * string(meeting_id); verbose)
+    return request_agenda_items(AGENDA_URL_PREFIX * string(meeting_id); verbose)
 end
 
 function request_agenda_items(meeting_link::AbstractString; verbose=false)
-    if !startswith(meeting_link, agenda_url_prefix)
-        meeting_link = agenda_url_prefix * meeting_link
+    if !startswith(meeting_link, AGENDA_URL_PREFIX)
+        meeting_link = AGENDA_URL_PREFIX * meeting_link
         @warn "Inserting missing agenda prefix" meeting_link
     end
 
@@ -65,7 +67,10 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
 
     rows = findall("//td[@class='Title']", html)
     items = map(rows) do r
-        length(elements(r)) == 0 && return nothing
+        if length(elements(r)) == 0
+            isempty(r.content) && return nothing
+            return r
+        end
         return only(elements(r))
     end
 
@@ -94,31 +99,44 @@ end
 function _get_agenda_item(element::EzXML.Node)
     link = _get_link(element)
 
+    _get_colspan = (el) -> begin
+        if haskey(el, "colspan")
+            return parse(Int, el["colspan"])
+        elseif haskey(parentelement(el), "colspan")
+            return parse(Int, parentelement(el)["colspan"])
+        end
+        return nothing
+    end
+
     # Get content details
     type = missing
+    id = missing
     content = element.content
-    id = nothing
-    if element.name == "strong"
-        type = :heading
-    elseif contains(element.content, ":")
+    colspan = _get_colspan(element)
+    if element.name == "strong" || colspan == 10
+        # Cool, it's a heading! Top level or sub?
+        type = colspan == 10 ? :heading : Symbol("subheading_$(10 - colspan)")
+    elseif contains(element.content, ":") # The dumbest way to figure out if something is an item...and yet, it workds
         x = split(element.content, " : "; limit=2)
         id = tryparse(Int, x[1])
-        if length(x) == 2 && !isnothing(id)
+        if length(x) == 2 && !ismissing(id)
             content = x[2]
             type = :item
-            id = x[1]
         end
     end
 
-    # Update types
+    # Start new if statement, b/c maybe we thought something would have an id but
+    # then it didn't:
     if ismissing(type)
         if !isnothing(link)
             type = :attachment
+        elseif !isnothing(colspan)
+            type = Symbol("subheading_$(10 - colspan)")
         else
             type = :unknown
         end
     end
-
+    link = isnothing(link) ? missing : link #Schema expects missing not nothing
     return Agenda(; id, content, type, link)
 end
 
@@ -134,12 +152,12 @@ function filter_agenda(agenda::DataFrame, search_terms; case_invariant=true)
     case_invariant && (search_terms = lowercase.(search_terms))
     @debug search_terms
 
-    check_item = (is_heading, content) -> begin
-        is_heading && return false
+    check_item = (type, content) -> begin
+        contains(string(type), "heading") && return false
         case_invariant && (content = lowercase(content))
         return any(occursin(p, content) for p in search_terms)
     end
-    return filter([:is_heading, :content] => check_item, agenda)
+    return filter([:type, :content] => check_item, agenda)
 end
 
 #####

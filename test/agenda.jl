@@ -6,8 +6,8 @@
     @test count(t -> contains(string(t), "heading"), items.type) == 4
     @test names(items) == ["id", "content", "type", "link"]
 
-    @test request_agenda_items(meeting_link) == request_agenda_items(3163)
-    @test request_agenda_items("3163") == request_agenda_items(3163)
+    @test isequal(request_agenda_items(meeting_link), request_agenda_items(3163))
+    @test isequal(request_agenda_items("3163"), request_agenda_items(3163))
 
     # support additional special cases (this meeting has a video but no agenda)
     meeting_link2 = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3421"

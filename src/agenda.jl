@@ -40,7 +40,7 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
         mkpath(dirname(cache_path))
         Legolas.write(cache_path, items, agenda_schema)
     end
-    return DataFrame(Legolas.read(cache_path))
+    return DataFrame(Legolas.read(cache_path)) #;validate=false)
 end
 
 """

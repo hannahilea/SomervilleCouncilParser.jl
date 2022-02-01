@@ -1,17 +1,15 @@
 const AGENDA_URL_PREFIX = "$(SITE_ROOT)/Detail_Meeting.aspx?ID="
 
-#TODO: Add "Agenda" in its own right? Currently have "Meeting" and AgendaItem
-
-const agenda_version = 2
-const agenda_schema = Legolas.Schema("agenda", agenda_version)
-const Agenda = Legolas.@row("agenda@2",     #TODO: rename to AgendaItem
-                            id::Union{Int,Missing},
-                            content::String,
-                            type::Symbol,
-                            link::Union{String,Missing})
+const agenda_item_version = 2
+const agenda_item_schema = Legolas.Schema("agenda-item", agenda_item_version)
+const AgendaItem = Legolas.@row("agenda-item@2",     #TODO: rename to AgendaItemItem
+                                id::Union{Int,Missing},
+                                content::String,
+                                type::Symbol,
+                                link::Union{String,Missing})
 
 function agenda_cache_path(cache_dir, id)
-    return joinpath(cache_dir, "v$(agenda_version)", "agenda-$(id).arrow")
+    return joinpath(cache_dir, "v$(agenda_item_version)", "agenda-$(id).arrow")
 end
 
 """
@@ -38,7 +36,7 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
     if !isfile(cache_path)
         items = request_agenda_items(meeting_link)
         mkpath(dirname(cache_path))
-        Legolas.write(cache_path, items, agenda_schema)
+        Legolas.write(cache_path, items, agenda_item_schema)
     end
     return DataFrame(Legolas.read(cache_path)) #;validate=false)
 end
@@ -140,7 +138,7 @@ function _get_agenda_item(element::EzXML.Node)
     #Schema expects `missing`s not `nothing`s
     link = isnothing(link) ? missing : link
     id = isnothing(id) ? missing : id
-    return Agenda(; id, content, type, link)
+    return AgendaItem(; id, content, type, link)
 end
 
 """

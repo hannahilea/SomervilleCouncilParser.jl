@@ -43,7 +43,7 @@ end
 
     # When cached item exists, load it!
     # ...to test, override table saved at cache path and make sure _that's_ what loads
-    junk = DataFrame([Agenda(; id=missing, content="foo", link="rad", type=:unknown)])
+    junk = DataFrame([AgendaItem(; id=missing, content="foo", link="rad", type=:unknown)])
     p = only(readdir(joinpath(cache_dir, "v$(agenda_version)"); join=true))
     Legolas.write(p, junk, Legolas.Schema("agenda@2"))
     cached_items = get_agenda_items(meeting_link; cache_dir)

@@ -212,7 +212,7 @@ function search_agendas_for_content(start_date, stop_date, search_terms; cache_d
     num_irrel = nrow(meetings) - num_failed - num_rel_m
     failed = num_failed == 0 ? "" :
              "\n  -> $(num_failed) meetings that failed parsing (may be relevant)"
-    extra = nrow(relevant_items) == 0 ? "" : "\n-> $(length(unique(relevant_items.meeting_link))) meeting(s) with a total of $(nrow(relevant_items)) relevant item(s)"
+    extra = nrow(relevant_items) == 0 ? "" : "-> $(length(unique(relevant_items.meeting_link))) meeting(s) with a total of $(nrow(relevant_items)) relevant item(s)\n"
     @info """For the $(nrow(meetings)) meetings between $(start_date) and $(stop_date):
             $extra-> $(num_irrel) meeting(s) with no relevant items$failed
           """

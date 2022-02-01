@@ -9,9 +9,10 @@ Search the meeting artifacts (agendas, minutes) of the City Council of Somervill
 
 **Contents:**
 
-- [Motivation](#motivation)
-- [Getting started](#getting-started)
-- [Feature requests, bugs, query assistance](#feature-requests-bugs-and-query-assistance)
+- [SomervilleCouncilParser.jl](#somervillecouncilparserjl)
+  - [Motivation](#motivation)
+  - [Getting started](#getting-started)
+  - [Feature requests, bugs, and query assistance](#feature-requests-bugs-and-query-assistance)
 
 ## Motivation
 While the Somerville, MA, City Council agendas and minutes are [posted publicly](http://somervillecityma.iqm2.com/Citizens/calendar.aspx), it can be difficult to search through them---the [built-in site search](http://somervillecityma.iqm2.com/Citizens/Search.aspx#SearchText=) is good for one-off queries, but not really for larger data investigation tasks. SomervilleCouncilParser.jl allows you to search those artifacts in a way that facilitates downstream munging.
@@ -64,7 +65,7 @@ julia> results = search_agendas_for_content("9/1/2021", "9/30/2021", ["fluff"]);
 └ Searching their agendas for ["fluff"]...
 Progress: 100%|██████████████████████████████████████████████████| Time: 0:00:04
 ┌ Info: For the 13 meetings between 9/1/2021 and 9/30/2021:
-│   -> 1 meeting(s) with a total of 1 relevant item(s)
+│   -> 1 meeting(s) with a total of 2 relevant item(s)
 └   -> 12 meeting(s) with no relevant items
 ```
 
@@ -72,7 +73,8 @@ Now you know which meeting minutes to read!
 ```julia
 julia> display_items_by_meeting(results.items)
  * 2021-09-09T19:00:00 - City Council: http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3404
-   -> 212344 : Public Event License, Union Square Main Streets What the Fluff?, Union Sq Plaza, Sept 22, 23, 24, 25, 26, 8AM-11PM.
+   -> Public Event License, Union Square Main Streets What the Fluff?, Union Sq Plaza, Sept 22, 23, 24, 25, 26, 8AM-11PM.
+   -> PE What the Fluff 9-22
 ```
 (If you follow the link to the agenda, and click on item 212344, you can see that the Council voted unanimously to approve the festival. Phew!)
 

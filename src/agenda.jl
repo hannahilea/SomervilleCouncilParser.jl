@@ -1,12 +1,15 @@
-const agenda_url_prefix = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID="
+const AGENDA_URL_PREFIX = "$(SITE_ROOT)/Detail_Meeting.aspx?ID="
 
-const agenda_version = 1
-const agenda_schema = Legolas.Schema("agenda", agenda_version)
-const Agenda = Legolas.@row("agenda@1", item::Union{Int,Nothing,Missing}, content::String,
-                            is_heading::Bool = isnothing(item))
+const agenda_item_version = 2
+const agenda_item_schema = Legolas.Schema("agenda-item", agenda_item_version)
+const AgendaItem = Legolas.@row("agenda-item@2",     #TODO: rename to AgendaItemItem
+                                id::Union{Int,Missing},
+                                content::String,
+                                type::Symbol,
+                                link::Union{String,Missing})
 
 function agenda_cache_path(cache_dir, id)
-    return joinpath(cache_dir, "v$(agenda_version)", "agenda-$(id).arrow")
+    return joinpath(cache_dir, "v$(agenda_item_version)", "agenda-$(id).arrow")
 end
 
 """
@@ -23,7 +26,7 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
     isnothing(cache_dir) && return request_agenda_items(meeting_link)
 
     # Figure out caching info
-    id = replace(meeting_link, agenda_url_prefix => "")
+    id = replace(meeting_link, AGENDA_URL_PREFIX => "")
     cache_path = agenda_cache_path(cache_dir, id)
     if isnothing(tryparse(Int, id))
         @warn "Unexpected agenda meeting agenda id; may yield wonky cache path!" meeting_link id cache_path
@@ -33,9 +36,9 @@ function get_agenda_items(meeting_link; cache_dir=nothing)
     if !isfile(cache_path)
         items = request_agenda_items(meeting_link)
         mkpath(dirname(cache_path))
-        Legolas.write(cache_path, items, agenda_schema)
+        Legolas.write(cache_path, items, agenda_item_schema)
     end
-    return DataFrame(Legolas.read(cache_path))
+    return DataFrame(Legolas.read(cache_path)) #;validate=false)
 end
 
 """
@@ -46,12 +49,12 @@ the full link (`"http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?I
 the meeting ID (`2570`).
 """
 function request_agenda_items(meeting_id; verbose=false)
-    return request_agenda_items(agenda_url_prefix * string(meeting_id); verbose)
+    return request_agenda_items(AGENDA_URL_PREFIX * string(meeting_id); verbose)
 end
 
 function request_agenda_items(meeting_link::AbstractString; verbose=false)
-    if !startswith(meeting_link, agenda_url_prefix)
-        meeting_link = agenda_url_prefix * meeting_link
+    if !startswith(meeting_link, AGENDA_URL_PREFIX)
+        meeting_link = AGENDA_URL_PREFIX * meeting_link
         @warn "Inserting missing agenda prefix" meeting_link
     end
 
@@ -62,23 +65,80 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
 
     rows = findall("//td[@class='Title']", html)
     items = map(rows) do r
-        length(elements(r)) == 0 && return nothing
+        if length(elements(r)) == 0
+            isempty(r.content) && return nothing
+            return r
+        end
         return only(elements(r))
     end
-    filter!(!isnothing, items)
 
-    # Headings have `name` "strong"; main items are numbered ("number : description").
-    # Remove items that are not headings or top-level items.
-    filter!(i -> i.name == "strong" || contains(i.content, ":"), items)
+    valid_items = map(_get_agenda_item, items)
+    filter!(!isnothing, valid_items)
+    return DataFrame(valid_items)
+end
 
-    items = map(items) do i
-        i.name == "strong" && return Agenda(; item=nothing, i.content)
-        x = split(i.content, " : "; limit=2)
-        item = tryparse(Int, x[1])
-        content = length(x) == 2 && !isnothing(item) ? x[2] : x[1]
-        return Agenda(; item, content)
+_get_agenda_item(::Nothing) = nothing
+
+function _get_link(element::EzXML.Node)
+    get_href = (el) -> begin
+        haskey(el, "href") || return nothing
+        link = replace(el["href"], " "=>"%20")
+        startswith(link, "Detail") && (link = joinpath(SITE_ROOT, link))
+        return link
     end
-    return DataFrame(items)
+
+    href = get_href(element)
+    isnothing(href) || return href
+    length(elements(element)) == 0 && return nothing
+    link_child = only(elements(element))
+    return get_href(link_child)
+end
+
+function _get_agenda_item(element::EzXML.Node)
+    link = _get_link(element)
+
+    _get_colspan = (el) -> begin
+        if haskey(el, "colspan")
+            return parse(Int, el["colspan"])
+        elseif haskey(parentelement(el), "colspan")
+            return parse(Int, parentelement(el)["colspan"])
+        end
+        return nothing
+    end
+
+    # Get content details
+    type = missing
+    id = missing
+    content = element.content
+    colspan = _get_colspan(element)
+    if element.name == "strong" || colspan == 10
+        # Cool, it's a heading! Top level or sub?
+        type = colspan == 10 ? :heading : Symbol("subheading_$(10 - colspan)")
+    elseif contains(element.content, ":") # The dumbest way to figure out if something is an item...and yet, it workds
+        x = split(element.content, " : "; limit=2)
+        id = tryparse(Int, x[1])
+        if length(x) == 2 && !ismissing(id)
+            content = x[2]
+            type = :item
+        end
+    end
+
+    # Start new if statement, b/c maybe we thought something would have an id but
+    # then it didn't:
+    if ismissing(type)
+        if !isnothing(link)
+            type = :attachment
+        elseif !isnothing(colspan)
+            type = Symbol("subheading_$(10 - colspan)")
+        else
+            type = :unknown
+        end
+    end
+
+    #Schema expects `missing`s not `nothing`s
+    link = isnothing(link) ? missing : link
+    id = isnothing(id) ? missing : id
+    return AgendaItem(; id, content, type, link)
 end
 
 """
@@ -93,12 +153,12 @@ function filter_agenda(agenda::DataFrame, search_terms; case_invariant=true)
     case_invariant && (search_terms = lowercase.(search_terms))
     @debug search_terms
 
-    check_item = (is_heading, content) -> begin
-        is_heading && return false
+    check_item = (type, content) -> begin
+        contains(string(type), "heading") && return false
         case_invariant && (content = lowercase(content))
         return any(occursin(p, content) for p in search_terms)
     end
-    return filter([:is_heading, :content] => check_item, agenda)
+    return filter([:type, :content] => check_item, agenda)
 end
 
 #####
@@ -121,6 +181,7 @@ function search_agendas_for_content(start_date, stop_date, search_terms; cache_d
     relevant_items = DataFrame()
     p = Progress(nrow(meetings) + 1)
     next!(p)
+
     _get_relevant_items = (link, date, name) -> begin
         try
             next!(p)
@@ -131,12 +192,11 @@ function search_agendas_for_content(start_date, stop_date, search_terms; cache_d
             nrow(items) == 0 && return (0, total_items, nothing)
 
             insertcols!(items, :meeting => name, :date => date, :meeting_link => link)
-            relevant_items = vcat(relevant_items, items)
+            append!(relevant_items, items)
             return (nrow(items), total_items, nothing)
         catch e
-            return (0, total_items, e)
+            return (0, missing, e)
         end
-
         return true
     end
     transform!(meetings,
@@ -150,9 +210,9 @@ function search_agendas_for_content(start_date, stop_date, search_terms; cache_d
     num_irrel = nrow(meetings) - num_failed - num_rel_m
     failed = num_failed == 0 ? "" :
              "\n  -> $(num_failed) meetings that failed parsing (may be relevant)"
+    extra = nrow(relevant_items) == 0 ? "" : "-> $(length(unique(relevant_items.meeting_link))) meeting(s) with a total of $(nrow(relevant_items)) relevant item(s)\n"
     @info """For the $(nrow(meetings)) meetings between $(start_date) and $(stop_date):
-            -> $(length(unique(relevant_items.meeting_link))) meeting(s) with a total of $(nrow(relevant_items)) relevant item(s)
-            -> $(num_irrel) meeting(s) with no relevant items$failed
+            $extra-> $(num_irrel) meeting(s) with no relevant items$failed
           """
     return (; items=relevant_items, meetings)
 end

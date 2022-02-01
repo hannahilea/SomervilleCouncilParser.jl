@@ -13,6 +13,9 @@
     meeting_link2 = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID=3421"
     items = SomervilleCouncilParser.request_agenda_items(meeting_link2)
     @test nrow(items) == 0
+
+    items_all = SomervilleCouncilParser.request_agenda_items(3427)
+    @test nrow(items_all) == 79
 end
 
 @testset "`get_agenda_items`" begin

@@ -1,4 +1,4 @@
-const agenda_url_prefix = "http://somervillecityma.iqm2.com/Citizens/Detail_Meeting.aspx?ID="
+const agenda_url_prefix = "$(SITE_ROOT)/Detail_Meeting.aspx?ID="
 
 const agenda_version = 2
 const agenda_schema = Legolas.Schema("agenda", agenda_version)
@@ -68,24 +68,58 @@ function request_agenda_items(meeting_link::AbstractString; verbose=false)
         length(elements(r)) == 0 && return nothing
         return only(elements(r))
     end
-    filter!(!isnothing, items)
 
-    # Headings have `name` "strong"; main items are numbered ("number : description").
-    # Remove items that are not headings or top-level items.
-    #TODO: keep attachments! warn about other stuff?
-    filter!(i -> i.name == "strong" || contains(i.content, ":"), items)
+    valid_items = map(_get_agenda_item, items)
+    filter!(!isnothing, valid_items)
+    return DataFrame(valid_items)
+end
 
-    items = map(items) do i
-        i.name == "strong" && return Agenda(; id=nothing, i.content, type=:heading, link="TODO")
-        #TODO: subullet doc attachment??
-        x = split(i.content, " : "; limit=2)
-        id = tryparse(Int, x[1])
-        content = length(x) == 2 && !isnothing(id) ? x[2] : x[1]
-        link = "TODO" #TODO
-        type = isnothing(id) ? :item : :attachment #TODO make sure this is the only other case....
-        return Agenda(; id, content, type, link)
+_get_agenda_item(::Nothing) = nothing
+
+function _get_link(element::EzXML.Node)
+    get_href = (el) -> begin
+        haskey(el, "href") || return nothing
+        link = replace(el["href"], " "=>"%20")
+        startswith(link, "Detail") && (link = joinpath(SITE_ROOT, link))
+        return link
     end
-    return DataFrame(items)
+
+    href = get_href(element)
+    isnothing(href) || return href
+    length(elements(element)) == 0 && return nothing
+    link_child = only(elements(element))
+    return get_href(link_child)
+end
+
+function _get_agenda_item(element::EzXML.Node)
+    link = _get_link(element)
+
+    # Get content details
+    type = missing
+    content = element.content
+    id = nothing
+    if element.name == "strong"
+        type = :heading
+    elseif contains(element.content, ":")
+        x = split(element.content, " : "; limit=2)
+        id = tryparse(Int, x[1])
+        if length(x) == 2 && !isnothing(id)
+            content = x[2]
+            type = :item
+            id = x[1]
+        end
+    end
+
+    # Update types
+    if ismissing(type)
+        if !isnothing(link)
+            type = :attachment
+        else
+            type = :unknown
+        end
+    end
+
+    return Agenda(; id, content, type, link)
 end
 
 """

@@ -9,6 +9,8 @@ using Legolas
 using DataFrames
 using ProgressMeter
 
+const SITE_ROOT = "http://somervillecityma.iqm2.com/Citizens/"
+
 include("meeting.jl")
 export request_meetings, Meeting
 
